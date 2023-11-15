@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "zv/Lykgvwev10JUYRUHV8sdaQiY/8UBxsR9BFWsiKbYOmBE9/mgMCPVrh101qkUrzIabSbYVWNOa3hlRh5mfaw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\emil.rotmark\\.nuget\\packages\\raylib-cs\\4.5.0.4\\raylib-cs.4.5.0.4.nupkg.sha512",
+    "C:\\Users\\emil.rotmark\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}
