@@ -5,6 +5,9 @@ using System.Xml;
 using Raylib_cs;
 int windowWidth = 1280;
 int windowHeight = 720;
+int playerWidth = 40;
+int playerHeight = 64;
+bool gravity = true;
 Vector2 movement;
 int moveSpeed = 2;
 
@@ -50,7 +53,9 @@ walls.Add(new Rectangle(100, 300, 75, 80));
 Raylib.InitWindow(windowWidth, windowHeight, "Hi!");
 Raylib.SetTargetFPS(60);
 
-Rectangle player = new Rectangle(0, 0, 32, 64);
+Rectangle player = new Rectangle(0, 0, playerWidth, playerHeight);
+Rectangle groundCheck = new(0, playerHeight/2, playerWidth, 1);
+Vector2 playerCentre = new(playerHeight/2, playerWidth/2);
 Texture2D character = Raylib.LoadTexture("TheSillyBlue.png");
 
 string scene = "start";
@@ -69,7 +74,8 @@ while (!Raylib.WindowShouldClose())
     if (scene == "game")
     {
         Raylib.ClearBackground(Color.PINK);
-        Raylib.DrawTexture(character, (int)player.x, (int)player.y, Color.WHITE);
+        Raylib.DrawTexturePro(character, new Rectangle(0,0,character.width, character.height), player, new Vector2(0, 0), 0, Color.WHITE);
+        Raylib.DrawRectangleRec(groundCheck, Color.ORANGE);
 
         movement = Vector2.Zero;
 
@@ -84,7 +90,7 @@ while (!Raylib.WindowShouldClose())
         }
 
         player.x += movement.X;
-        player.y += movement.Y;
+        groundCheck.x = player.x;
 
         bool IsWalled = WallCheck(player, walls);
         if (IsWalled == true)
@@ -92,10 +98,21 @@ while (!Raylib.WindowShouldClose())
             player.x -= movement.X;
         }
 
+        player.y += movement.Y;
+        groundCheck.y = player.y+playerHeight;
         IsWalled = WallCheck(player, walls);
         if (IsWalled == true)
         {
             player.y -= movement.Y;
+        }
+
+        bool isGrounded = grounded(groundCheck, walls);
+        if (isGrounded == true){
+            gravity = false;
+        }
+
+        if (gravity == true){
+            player.y++;
         }
 
         foreach (Rectangle wall in walls)
@@ -134,6 +151,15 @@ static bool WallCheck(Rectangle player, List<Rectangle> walls)
     {
         if (Raylib.CheckCollisionRecs(player, wall))
         {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool grounded(Rectangle groundCheck, List<Rectangle> walls){
+    foreach (Rectangle wall in walls){
+        if (Raylib.CheckCollisionRecs(groundCheck, wall)){
             return true;
         }
     }
