@@ -8,9 +8,14 @@ int windowHeight = 720;
 int playerWidth = 40;
 int playerHeight = 64;
 int framesInAir = 0;
-int secondsInAir = 0;
+int jump = 0;
+int jumpHeight = 3;
+float gravityValue;
+float gravityBase = 2;
+float secondsInAir = 0;
 bool coyoteTiming = true;
 bool gravity = true;
+bool isJumping = false;
 Vector2 movement;
 int moveSpeed = 2;
 
@@ -57,7 +62,7 @@ Raylib.InitWindow(windowWidth, windowHeight, "Hi!");
 Raylib.SetTargetFPS(60);
 
 Rectangle player = new Rectangle(0, 0, playerWidth, playerHeight);
-Rectangle groundCheck = new(0, playerHeight/2, playerWidth, 1);
+Rectangle groundCheck = new(0, playerHeight/2, playerWidth/(float)1.06, 1);
 Vector2 playerCentre = new(playerHeight/2, playerWidth/2);
 Texture2D character = Raylib.LoadTexture("TheSillyBlue.png");
 
@@ -84,16 +89,18 @@ while (!Raylib.WindowShouldClose())
 
         if (Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT)) { movement.X = 1; }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_LEFT)) { movement.X = -1; }
-        if (Raylib.IsKeyDown(KeyboardKey.KEY_UP)) { movement.Y = -1; }
-        if (Raylib.IsKeyDown(KeyboardKey.KEY_DOWN)) { movement.Y = 1; }
-
-        if (movement.Length() > 0)
-        {
-            movement = Vector2.Normalize(movement) * moveSpeed;
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_UP) && coyoteTiming == true) {
+            jump = 90;
+            coyoteTiming = false;
+            isJumping = true;
+        }
+        if (jump > 0 && isJumping == true){
+            player.y -= jumpHeight;
+            jump--;
         }
 
         player.x += movement.X;
-        groundCheck.x = player.x;
+        groundCheck.x = player.x + 1;
 
         bool IsWalled = WallCheck(player, walls);
         if (IsWalled == true)
@@ -101,13 +108,6 @@ while (!Raylib.WindowShouldClose())
             player.x -= movement.X;
         }
 
-        player.y += movement.Y;
-        groundCheck.y = player.y+playerHeight;
-        IsWalled = WallCheck(player, walls);
-        if (IsWalled == true)
-        {
-            player.y -= movement.Y;
-        }
 
         bool isGrounded = grounded(groundCheck, walls);
         if (isGrounded == true){
@@ -121,15 +121,30 @@ while (!Raylib.WindowShouldClose())
 
         if (gravity == true){
             framesInAir++;
-            if (framesInAir > 60){
-                secondsInAir++;
+            if (framesInAir > 1 && framesInAir < 61){
+                secondsInAir += (float)1/60;
                 Console.WriteLine(secondsInAir);
+            }
+            if (framesInAir > 60){
                 framesInAir = 0;
             }
             if (coyoteTiming == true && framesInAir > 30){
                 coyoteTiming = false;
             }
-            player.y++;
+            gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
+            if (jump <= 0 && isJumping == true){
+                movement.Y += gravityValue - 3;
+            }
+            else{
+                movement.Y += gravityValue;
+            }
+            if (player.y > 700){
+                player.x = 0;
+                player.y = 0;
+                framesInAir = 0;
+                secondsInAir = 0;
+                coyoteTiming = true;
+            }
         }
 
         else if (gravity == false){
@@ -140,6 +155,14 @@ while (!Raylib.WindowShouldClose())
                 secondsInAir = 0;
                 framesInAir = 0;
             }
+        }
+
+        player.y += movement.Y;
+        groundCheck.y = player.y+playerHeight;
+        IsWalled = WallCheck(player, walls);
+        if (IsWalled == true)
+        {
+            player.y -= movement.Y;
         }
 
         foreach (Rectangle wall in walls)
