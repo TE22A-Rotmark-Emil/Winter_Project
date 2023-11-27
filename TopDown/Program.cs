@@ -7,6 +7,9 @@ int windowWidth = 1280;
 int windowHeight = 720;
 int playerWidth = 40;
 int playerHeight = 64;
+int framesInAir = 0;
+int secondsInAir = 0;
+bool coyoteTiming = true;
 bool gravity = true;
 Vector2 movement;
 int moveSpeed = 2;
@@ -111,8 +114,32 @@ while (!Raylib.WindowShouldClose())
             gravity = false;
         }
 
+
+        else if (isGrounded == false){
+            gravity = true;
+        }
+
         if (gravity == true){
+            framesInAir++;
+            if (framesInAir > 60){
+                secondsInAir++;
+                Console.WriteLine(secondsInAir);
+                framesInAir = 0;
+            }
+            if (coyoteTiming == true && framesInAir > 30){
+                coyoteTiming = false;
+            }
             player.y++;
+        }
+
+        else if (gravity == false){
+            if (coyoteTiming == false){
+                coyoteTiming = true;
+            }
+            if (secondsInAir > 0 || framesInAir > 0){
+                secondsInAir = 0;
+                framesInAir = 0;
+            }
         }
 
         foreach (Rectangle wall in walls)
