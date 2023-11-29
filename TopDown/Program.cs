@@ -19,6 +19,10 @@ bool isJumping = false;
 Vector2 movement;
 int moveSpeed = 2;
 
+Character hero = new Character();
+
+hero.Reset();
+
 int space = 2;
 
 Random generator = new();
@@ -94,9 +98,12 @@ while (!Raylib.WindowShouldClose())
             coyoteTiming = false;
             isJumping = true;
         }
-        if (jump > 0 && isJumping == true){
+        if (jump > 0 && isJumping == true || gravity == true && isJumping == true){
             player.y -= jumpHeight;
             jump--;
+        }
+        else{
+            isJumping = false;
         }
 
         player.x += movement.X;
@@ -123,7 +130,6 @@ while (!Raylib.WindowShouldClose())
             framesInAir++;
             if (framesInAir > 1 && framesInAir < 61){
                 secondsInAir += (float)1/60;
-                Console.WriteLine(secondsInAir);
             }
             if (framesInAir > 60){
                 framesInAir = 0;
@@ -132,21 +138,11 @@ while (!Raylib.WindowShouldClose())
                 coyoteTiming = false;
             }
             gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
-            if (jump <= 0 && isJumping == true){
-                movement.Y += gravityValue - 3;
-            }
-            else{
-                movement.Y += gravityValue;
-            }
+            movement.Y += gravityValue;
             if (player.y > 700){
-                player.x = 0;
-                player.y = 0;
-                framesInAir = 0;
-                secondsInAir = 0;
-                coyoteTiming = true;
+                (player.x, player.y, framesInAir, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, secondsInAir, coyoteTiming);
             }
         }
-
         else if (gravity == false){
             if (coyoteTiming == false){
                 coyoteTiming = true;
@@ -160,18 +156,13 @@ while (!Raylib.WindowShouldClose())
         player.y += movement.Y;
         groundCheck.y = player.y+playerHeight;
         IsWalled = WallCheck(player, walls);
-        if (IsWalled == true)
-        {
-            player.y -= movement.Y;
-        }
-
-        foreach (Rectangle wall in walls)
-        {
-            if (Raylib.CheckCollisionRecs(player, wall))
-            {
-
+        
+        while (IsWalled == true){
+            if (gravity == true){
+                gravity = false;
             }
-
+            player.y--;
+            IsWalled = WallCheck(player, walls);
         }
 
         foreach (Rectangle wall in walls)
@@ -193,6 +184,15 @@ while (!Raylib.WindowShouldClose())
 
 
     Raylib.EndDrawing();
+}
+static (float, float, int, float, bool) ResetValues(float X, float Y, int frames, float seconds, bool coyote){
+    X = 0;
+    Y = 0;
+    frames = 0;
+    seconds = 0;
+    coyote = true;
+
+    return(X, Y, frames, seconds, coyote);
 }
 
 static bool WallCheck(Rectangle player, List<Rectangle> walls)
