@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml;
@@ -10,6 +11,7 @@ int playerHeight = 64;
 int framesInAir = 0;
 int jump = 0;
 int jumpHeight = 3;
+int moveSpeed = 2;
 float gravityValue;
 float gravityBase = 2;
 float secondsInAir = 0;
@@ -18,32 +20,29 @@ bool gravity = true;
 bool isJumping = false;
 bool IsWalled = false;
 Vector2 movement;
-int moveSpeed = 2;
 
 // Character hero = new Character();
 // hero.Reset();
 
-int space = 2;
+// Random generator = new();
 
-Random generator = new();
+// int rand = Random.Shared.Next(1, 2);
 
-int rand = Random.Shared.Next(1, 2);
+// int[,] map = new int[15, 15];
 
-int[,] map = new int[15, 15];
+// int xEnemy = map.GetLength(0) / 4;
+// int yEnemy = map.GetLength(1) / 4;
 
-int xEnemy = map.GetLength(0) / 4;
-int yEnemy = map.GetLength(1) / 4;
-
-for (int y = 3; y < 15; y += 4)
-{
-    for (int x = 3; x < 15; x += 4)
-    {
-        if (Random.Shared.Next(2) == 1)
-        {
-            map[x, y] = 1;
-        }
-    }
-}
+// for (int y = 3; y < 15; y += 4)
+// {
+//     for (int x = 3; x < 15; x += 4)
+//     {
+//         if (Random.Shared.Next(2) == 1)
+//         {
+//             map[x, y] = 1;
+//         }
+//     }
+// }
 
 // for (int y = 0; y < map.GetLength(1); y++)
 // {
@@ -63,6 +62,7 @@ for (int y = 3; y < 15; y += 4)
 List<Rectangle> walls = new()
 {
     new(300, 300, 150, 20),
+    new(300, 400, 150, 20),
     new(500, 300, 15, 200),
     new(100, 300, 75, 80),
     new(600, 300, 15, 80),
@@ -84,8 +84,8 @@ Raylib.InitWindow(windowWidth, windowHeight, "Hi!");
 Raylib.SetTargetFPS(60);
 
 Rectangle player = new Rectangle(0, 0, playerWidth, playerHeight);
-Rectangle groundCheck = new(0, playerHeight/2, playerWidth/(float)1.12, 1);
-Rectangle headCheck = new(0, playerHeight, playerWidth, 12);
+Rectangle groundCheck = new(0, playerHeight/2, playerWidth, 1);
+Rectangle headCheck = new(0, playerHeight, playerWidth+2, 10);
 Texture2D character = Raylib.LoadTexture("TheSillyBlue.png");
 
 string scene = "start";
@@ -104,6 +104,7 @@ while (!Raylib.WindowShouldClose())
     {
         Raylib.ClearBackground(Color.PINK);
         Raylib.DrawTexturePro(character, new Rectangle(0,0,character.width, character.height), player, new Vector2(0, 0), 0, Color.WHITE);
+        Raylib.DrawRectangleRec(player, Color.DARKBLUE);
         Raylib.DrawRectangleRec(groundCheck, Color.ORANGE);
         Raylib.DrawRectangleRec(headCheck, Color.BLUE);
 
@@ -117,15 +118,21 @@ while (!Raylib.WindowShouldClose())
             isJumping = true;
         }
         if (jump > 0 && isJumping == true || gravity == true && isJumping == true){
-            player.y -= jumpHeight;
-            jump--;
+            if (notWallCheck(headCheck, walls) == true){
+                jump = 0;
+                gravity = true;
+            }
+            else{
+                player.y -= jumpHeight;
+                jump--;
+            }
         }
         else{
             isJumping = false;
         }
 
         player.x += movement.X;
-        groundCheck.x = player.x + 1;
+        groundCheck.x = player.x;
         headCheck.x = player.x;
 
         if (WallCheck(player, walls) == true)
@@ -138,13 +145,16 @@ while (!Raylib.WindowShouldClose())
 
 
         bool isGrounded = grounded(groundCheck, walls);
-        if (isGrounded == true){
-            gravity = false;
+        // if (isGrounded == true && WallCheck(player, walls) == false){
+        //     gravity = false;
+        // }
+
+        if (isGrounded == false){
+            gravity = true;
         }
 
-
-        else if (isGrounded == false){
-            gravity = true;
+        if (isGrounded == true){
+            jump = 0;
         }
 
         if (gravity == true){
@@ -158,7 +168,12 @@ while (!Raylib.WindowShouldClose())
             if (coyoteTiming == true && framesInAir > 30){
                 coyoteTiming = false;
             }
-            gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
+            if (isJumping == true){
+                gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
+            }
+            else{
+                gravityValue = (float)gravityBase*secondsInAir*secondsInAir - jumpHeight; //adds autojumping LOL. implement as feature then create proper gravity
+            }
             movement.Y += gravityValue;
             if (player.y > 700){
                 (player.x, player.y, framesInAir, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, secondsInAir, coyoteTiming);
@@ -176,25 +191,41 @@ while (!Raylib.WindowShouldClose())
 
         player.y += movement.Y;
         groundCheck.y = player.y+playerHeight;
-        headCheck.y = player.y-2;
+        headCheck.y = player.y-5;
         if (WallCheck(player, walls) == true){
             if (notWallCheck(headCheck, walls) == false){
                 IsWalled = true;
             }
         }
 
-        if (IsWalled == true){
-            player.x -= movement.X;
-        }
+        // while (IsWalled == true){
+        //     if (gravity == true){
+        //         gravity = false;
+        //     }
+        //     player.x -= movement.X;
+        //     IsWalled = WallCheck(player, walls);
+        // }
         // IsWalled = WallCheck(player, walls);
         
-        while (IsWalled == true){
+        if (IsWalled == true){
             if (gravity == true){
                 gravity = false;
             }
-            player.y--;
-            IsWalled = WallCheck(player, walls);
+            Rectangle collisionRectangle;
+            foreach (Rectangle wall in walls){
+                collisionRectangle = Raylib.GetCollisionRec(player, wall);
+                // if (collisionRectangle.x > 0){
+                //     player.x -= collisionRectangle.width;
+                // }
+                if (collisionRectangle.y > 0){
+                    player.y -= collisionRectangle.height;
+                }
+            }
         }
+        // while (WallCheck(player, walls) == true && WallCheck(headCheck, walls) == true){
+        //     Console.WriteLine("True");
+        //     player.y++;
+        // }
 
         if (player.x > 1280){
             scene = "level 2";
