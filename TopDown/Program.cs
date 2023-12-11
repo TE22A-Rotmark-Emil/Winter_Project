@@ -12,6 +12,7 @@ int framesInAir = 0;
 int jump = 0;
 int jumpHeight = 3;
 int moveSpeed = 2;
+int level = 0;
 float gravityValue;
 float gravityBase = 2;
 float secondsInAir = 0;
@@ -21,43 +22,7 @@ bool isJumping = false;
 bool IsWalled = false;
 Vector2 movement;
 
-// Character hero = new Character();
-// hero.Reset();
-
-// Random generator = new();
-
-// int rand = Random.Shared.Next(1, 2);
-
-// int[,] map = new int[15, 15];
-
-// int xEnemy = map.GetLength(0) / 4;
-// int yEnemy = map.GetLength(1) / 4;
-
-// for (int y = 3; y < 15; y += 4)
-// {
-//     for (int x = 3; x < 15; x += 4)
-//     {
-//         if (Random.Shared.Next(2) == 1)
-//         {
-//             map[x, y] = 1;
-//         }
-//     }
-// }
-
-// for (int y = 0; y < map.GetLength(1); y++)
-// {
-//     for (int x = 0; x < map.GetLength(0); x++)
-//     {
-//         Console.SetCursorPosition(x * space, y * (space - 1));
-//         Console.Write(map[x, y]);
-//     }
-// }
-
-// List<Rectangle> walls = new();
-
-// walls.Add(new Rectangle(300, 300, 150, 20));
-// walls.Add(new Rectangle(500, 300, 15, 200));
-// walls.Add(new Rectangle(100, 300, 75, 80));
+Rectangle spawnPoint = new(300, 300, 150, 20);
 
 List<Rectangle> walls = new()
 {
@@ -73,8 +38,10 @@ List<Rectangle> walls = new()
 
 List<Rectangle> wallsForLevel2 = new()
 {
-    new(300, 500, 150, 20)
+    
 };
+
+walls.Add(spawnPoint);
 
 List<Rectangle> boosts = new(){
     new(1100, 400, 10, 10)
@@ -85,7 +52,7 @@ Raylib.SetTargetFPS(60);
 
 Rectangle player = new Rectangle(0, 0, playerWidth, playerHeight);
 Rectangle groundCheck = new(0, playerHeight/2, playerWidth, 1);
-Rectangle headCheck = new(0, playerHeight, playerWidth+2, 10);
+Rectangle headCheck = new(0, playerHeight, playerWidth, 10);
 Texture2D character = Raylib.LoadTexture("TheSillyBlue.png");
 
 string scene = "start";
@@ -113,18 +80,17 @@ while (!Raylib.WindowShouldClose())
         if (Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT)) { movement.X = 1 * moveSpeed; }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_LEFT)) { movement.X = -1 * moveSpeed; }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_UP) && coyoteTiming == true) {
-            jump = 90;
+            jump = 1;
             coyoteTiming = false;
             isJumping = true;
         }
-        if (jump > 0 && isJumping == true || gravity == true && isJumping == true){
+        if (jump > 0 && isJumping == true){ // deleted "|| gravity == true && isJumping == true" (unclear purpose)
             if (notWallCheck(headCheck, walls) == true){
                 jump = 0;
                 gravity = true;
             }
             else{
                 player.y -= jumpHeight;
-                jump--;
             }
         }
         else{
@@ -155,6 +121,7 @@ while (!Raylib.WindowShouldClose())
 
         if (isGrounded == true){
             jump = 0;
+            gravity = false;
         }
 
         if (gravity == true){
@@ -168,15 +135,10 @@ while (!Raylib.WindowShouldClose())
             if (coyoteTiming == true && framesInAir > 30){
                 coyoteTiming = false;
             }
-            if (isJumping == true){
-                gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
-            }
-            else{
-                gravityValue = (float)gravityBase*secondsInAir*secondsInAir - jumpHeight; //adds autojumping LOL. implement as feature then create proper gravity
-            }
+            gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
             movement.Y += gravityValue;
             if (player.y > 700){
-                (player.x, player.y, framesInAir, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, secondsInAir, coyoteTiming);
+                (player.x, player.y, framesInAir, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, secondsInAir, coyoteTiming, spawnPoint, player);
             }
         }
         else if (gravity == false){
@@ -197,15 +159,6 @@ while (!Raylib.WindowShouldClose())
                 IsWalled = true;
             }
         }
-
-        // while (IsWalled == true){
-        //     if (gravity == true){
-        //         gravity = false;
-        //     }
-        //     player.x -= movement.X;
-        //     IsWalled = WallCheck(player, walls);
-        // }
-        // IsWalled = WallCheck(player, walls);
         
         if (IsWalled == true){
             if (gravity == true){
@@ -214,23 +167,25 @@ while (!Raylib.WindowShouldClose())
             Rectangle collisionRectangle;
             foreach (Rectangle wall in walls){
                 collisionRectangle = Raylib.GetCollisionRec(player, wall);
-                // if (collisionRectangle.x > 0){
-                //     player.x -= collisionRectangle.width;
-                // }
                 if (collisionRectangle.y > 0){
                     player.y -= collisionRectangle.height;
+                    headCheck.y -= collisionRectangle.height;
+                    groundCheck.y -= collisionRectangle.height;
                 }
             }
         }
-        // while (WallCheck(player, walls) == true && WallCheck(headCheck, walls) == true){
-        //     Console.WriteLine("True");
-        //     player.y++;
-        // }
 
-        if (player.x > 1280){
-            scene = "level 2";
+        if (player.x > 1280 && level == 1){
+            level = 2;
+            walls.Clear();
             walls = walls.Concat(wallsForLevel2).ToList();
+            spawnPoint = new(300, 500, 150, 20);
+            walls.Add(spawnPoint);
+            player.y = spawnPoint.y - player.height;
+            player.x = spawnPoint.x + spawnPoint.width/2;
+            gravity = false;
         }
+
 
         foreach (Rectangle wall in walls)
         {
@@ -240,9 +195,11 @@ while (!Raylib.WindowShouldClose())
         foreach (Rectangle boost in boosts){
             Raylib.DrawRectangleRec(boost, Color.WHITE);
         }
+
+        Raylib.DrawRectangleRec(spawnPoint, Color.GREEN);
     }
 
-    if (scene == "level 2"){
+    if (level == 2){
         foreach (Rectangle wall in wallsForLevel2){
             Raylib.DrawRectangleRec(wall, Color.GRAY);
         }
@@ -252,19 +209,19 @@ while (!Raylib.WindowShouldClose())
     {
         if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
         {
+            level = 1;
             scene = "game";
         }
     }
 
     Raylib.BeginDrawing();
 
-
-
     Raylib.EndDrawing();
 }
-static (float, float, int, float, bool) ResetValues(float X, float Y, int frames, float seconds, bool coyote){
-    X = 0;
-    Y = 0;
+static (float, float, int, float, bool) ResetValues(float X, float Y, int frames, float seconds, bool coyote, Rectangle spawnPoint, Rectangle player)
+{
+    X = spawnPoint.x + spawnPoint.width/2 - player.width/2;
+    Y = spawnPoint.y - player.height;
     frames = 0;
     seconds = 0;
     coyote = true;
