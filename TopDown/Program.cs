@@ -25,6 +25,8 @@ bool IsWalled = false;
 bool canMove = true;
 Vector2 movement;
 
+//todo: add proper support for powerups (turns out they don't work if you hit a wall without your feet colliding with the wall)
+
 Rectangle spawnPoint = new(300, 300, 150, 20);
 
 List<Rectangle> deathSquares = new(){
