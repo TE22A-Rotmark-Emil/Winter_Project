@@ -13,23 +13,29 @@ int jump = 0;
 int jumpHeight = 3;
 int moveSpeed = 2;
 int level = 0;
-float gravityValue;
+int powerUpTimer = 0;
+float gravityValue = 0;
 float gravityBase = 2;
 float secondsInAir = 0;
+bool dead = true;
 bool coyoteTiming = true;
 bool gravity = true;
 bool isJumping = false;
 bool IsWalled = false;
+bool canMove = true;
 Vector2 movement;
 
 Rectangle spawnPoint = new(300, 300, 150, 20);
+
+List<Rectangle> deathSquares = new(){
+    new(100, 300, 80, 80),
+};
 
 List<Rectangle> walls = new()
 {
     new(300, 300, 150, 20),
     new(300, 400, 150, 20),
     new(500, 300, 15, 200),
-    new(100, 300, 75, 80),
     new(600, 300, 15, 80),
     new(800, 450, 80, 15),
     new(1000, 450, 15, 15),
@@ -44,7 +50,7 @@ List<Rectangle> wallsForLevel2 = new()
 walls.Add(spawnPoint);
 
 List<Rectangle> boosts = new(){
-    new(1100, 400, 10, 10)
+    new(1100, 400, 20, 20)
 };
 
 Raylib.InitWindow(windowWidth, windowHeight, "Hi!");
@@ -77,6 +83,23 @@ while (!Raylib.WindowShouldClose())
 
         movement = Vector2.Zero;
 
+        if (powerUpTimer > 0){
+            if (Raylib.IsKeyDown(KeyboardKey.KEY_C)){
+                powerUpTimer = 0;
+            }
+            else{
+                powerUpTimer--;
+                player.x += 5;
+                if (isJumping == true){
+                    player.y -= gravityValue - jumpHeight;
+                }
+                else{
+                    player.y -= gravityValue;
+                }
+                (groundCheck.x, groundCheck.y, headCheck.x, headCheck.y) = Resync(groundCheck.x, groundCheck.y, headCheck.x, headCheck.y, player.x, player.y, playerHeight);
+            }
+        }
+
         if (Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT)) { movement.X = 1 * moveSpeed; }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_LEFT)) { movement.X = -1 * moveSpeed; }
         if (Raylib.IsKeyDown(KeyboardKey.KEY_UP) && coyoteTiming == true) {
@@ -85,7 +108,7 @@ while (!Raylib.WindowShouldClose())
             isJumping = true;
         }
         if (jump > 0 && isJumping == true){ // deleted "|| gravity == true && isJumping == true" (unclear purpose)
-            if (notWallCheck(headCheck, walls) == true){
+            if (WallCheck(headCheck, walls) == true){
                 jump = 0;
                 gravity = true;
             }
@@ -98,22 +121,31 @@ while (!Raylib.WindowShouldClose())
         }
 
         player.x += movement.X;
-        groundCheck.x = player.x;
-        headCheck.x = player.x;
 
-        if (WallCheck(player, walls) == true)
-        {
-            if (notWallCheck(headCheck, walls) == false){
-                IsWalled = true;
-            }
-            player.x -= movement.X;
+        if (dead == true){
+            (player.x, player.y, framesInAir, jump, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, jump, secondsInAir, coyoteTiming, spawnPoint, player);
+            powerUpTimer = 0;
+            dead = false;
         }
 
 
+        if (WallCheck(player, walls) == true)
+        {
+            if (WallCheck(headCheck, walls) == false){
+                IsWalled = true;
+            }
+            player.x -= movement.X;
+            (groundCheck.x, groundCheck.y, headCheck.x, headCheck.y) = Resync(groundCheck.x, groundCheck.y, headCheck.x, headCheck.y, player.x, player.y, playerHeight);
+        }
+        else{
+            IsWalled = false;
+        }
+
+        if (WallCheck(player, deathSquares) == true){
+            dead = true;
+        }
+
         bool isGrounded = grounded(groundCheck, walls);
-        // if (isGrounded == true && WallCheck(player, walls) == false){
-        //     gravity = false;
-        // }
 
         if (isGrounded == false){
             gravity = true;
@@ -138,7 +170,7 @@ while (!Raylib.WindowShouldClose())
             gravityValue = (float)gravityBase*secondsInAir*secondsInAir;
             movement.Y += gravityValue;
             if (player.y > 700){
-                (player.x, player.y, framesInAir, secondsInAir, coyoteTiming) = ResetValues(player.x, player.y, framesInAir, secondsInAir, coyoteTiming, spawnPoint, player);
+                dead = true;
             }
         }
         else if (gravity == false){
@@ -152,12 +184,14 @@ while (!Raylib.WindowShouldClose())
         }
 
         player.y += movement.Y;
-        groundCheck.y = player.y+playerHeight;
-        headCheck.y = player.y-5;
+        (groundCheck.x, groundCheck.y, headCheck.x, headCheck.y) = Resync(groundCheck.x, groundCheck.y, headCheck.x, headCheck.y, player.x, player.y, playerHeight);
         if (WallCheck(player, walls) == true){
-            if (notWallCheck(headCheck, walls) == false){
+            if (WallCheck(headCheck, walls) == false){
                 IsWalled = true;
             }
+        }
+        else{
+            IsWalled = false;
         }
         
         if (IsWalled == true){
@@ -166,6 +200,10 @@ while (!Raylib.WindowShouldClose())
             }
             Rectangle collisionRectangle;
             foreach (Rectangle wall in walls){
+                if (powerUpTimer > 0){
+                    Console.WriteLine("Disabled powerup");
+                    powerUpTimer = 0;
+                }
                 collisionRectangle = Raylib.GetCollisionRec(player, wall);
                 if (collisionRectangle.y > 0){
                     player.y -= collisionRectangle.height;
@@ -181,11 +219,23 @@ while (!Raylib.WindowShouldClose())
             walls = walls.Concat(wallsForLevel2).ToList();
             spawnPoint = new(300, 500, 150, 20);
             walls.Add(spawnPoint);
-            player.y = spawnPoint.y - player.height;
-            player.x = spawnPoint.x + spawnPoint.width/2;
+            dead = true;
             gravity = false;
         }
 
+        if (PowerUp(player, boosts) == true){
+            List<Rectangle> collidedBoosts = new();
+            foreach (Rectangle boost in boosts){
+                if (Raylib.CheckCollisionRecs(player, boost))
+                {
+                    collidedBoosts.Add(boost);
+                }
+            }
+            foreach (Rectangle collidedBoost in collidedBoosts){
+                boosts.Remove(collidedBoost);
+            }
+            powerUpTimer = 120;
+        }
 
         foreach (Rectangle wall in walls)
         {
@@ -197,6 +247,10 @@ while (!Raylib.WindowShouldClose())
         }
 
         Raylib.DrawRectangleRec(spawnPoint, Color.GREEN);
+
+        foreach (Rectangle deathSquare in deathSquares){
+            Raylib.DrawRectangleRec(deathSquare, Color.RED);
+        }
     }
 
     if (level == 2){
@@ -218,16 +272,32 @@ while (!Raylib.WindowShouldClose())
 
     Raylib.EndDrawing();
 }
-static (float, float, int, float, bool) ResetValues(float X, float Y, int frames, float seconds, bool coyote, Rectangle spawnPoint, Rectangle player)
+
+static (float, float, int, int, float, bool) ResetValues(float X, float Y, int frames, int jump, float seconds, bool coyote, Rectangle spawnPoint, Rectangle player)
 {
     X = spawnPoint.x + spawnPoint.width/2 - player.width/2;
     Y = spawnPoint.y - player.height;
     frames = 0;
+    jump = 0;
     seconds = 0;
     coyote = true;
 
-    return(X, Y, frames, seconds, coyote);
+    return(X, Y, frames, jump, seconds, coyote);
 }
+
+static (float, float, float, float) Resync(float groundCheckX, float groundCheckY, float headCheckX, float headCheckY, float playerX, float playerY, int playerHeight){
+    groundCheckX = playerX;
+    groundCheckY = playerY+playerHeight;
+    headCheckX = playerX;
+    headCheckY = playerY-5;
+
+    return(groundCheckX, groundCheckY, headCheckX, headCheckY);
+}
+
+groundCheck.x = player.x;
+headCheck.x = player.x;
+groundCheck.y = player.y+playerHeight;
+headCheck.y = player.y-5;
 
 static bool PowerUp(Rectangle player, List<Rectangle> boosts){
     foreach (Rectangle boost in boosts){
@@ -244,15 +314,6 @@ static bool WallCheck(Rectangle player, List<Rectangle> walls)
     {
         if (Raylib.CheckCollisionRecs(player, wall))
         {
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool notWallCheck(Rectangle headCheck, List<Rectangle> walls){
-    foreach (Rectangle wall in walls){
-        if (Raylib.CheckCollisionRecs(headCheck, wall)){
             return true;
         }
     }
