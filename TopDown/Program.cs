@@ -22,12 +22,12 @@ bool coyoteTiming = true;
 bool gravity = true;
 bool isJumping = false;
 bool IsWalled = false;
-bool canMove = true;
+// bool canMove = true;
 Vector2 movement;
 
 //todo: add proper support for powerups (turns out they don't work if you hit a wall without your feet colliding with the wall)
 
-Rectangle spawnPoint = new(300, 300, 150, 20);
+Rectangle spawnPoint = new(0, 0, 0, 0);
 
 List<Rectangle> deathSquares = new(){
     new(100, 300, 80, 80),
@@ -37,7 +37,7 @@ List<Rectangle> winSquares = new(){
     new(800, 300, 80, 80)
 };
 
-List<Rectangle> walls = new()
+List<Rectangle> wallsForLevel1 = new()
 {
     new(300, 300, 150, 20),
     new(300, 400, 150, 20),
@@ -53,10 +53,16 @@ List<Rectangle> wallsForLevel2 = new()
     new(600, 400, 150, 20)
 };
 
-walls.Add(spawnPoint);
+List<Rectangle> walls = new(){
+
+};
+
+List<Rectangle> boostsForLevel1 = new(){
+    new(1100, 400, 20, 20)
+};
 
 List<Rectangle> boosts = new(){
-    new(1100, 400, 20, 20)
+
 };
 
 Raylib.InitWindow(windowWidth, windowHeight, "Hi!");
@@ -281,16 +287,26 @@ while (!Raylib.WindowShouldClose())
         {
             level = 1;
             scene = "game";
+            spawnPoint = new(300, 300, 150, 20);
+            boosts = boosts.Concat(boostsForLevel1).ToList();
+            walls.Add(spawnPoint);
+            walls = walls.Concat(wallsForLevel1).ToList();
         }
     }
 
     if (scene == "win"){
         level = 0;
         Raylib.ClearBackground(Color.BLACK);
-        Raylib.DrawText("Win Get! (space to restart)", windowWidth/2, windowHeight/2, 48, Color.GOLD);
+        Raylib.DrawText("Win Get! (space to restart)", windowWidth/4, windowHeight/2, 48, Color.GOLD);
         if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE)){
             level = 1;
             scene = "game";
+            walls.Clear();
+            walls = walls.Concat(wallsForLevel1).ToList();
+            boosts = boosts.Concat(boostsForLevel1).ToList();
+            spawnPoint = new(300, 300, 150, 20);
+            walls.Add(spawnPoint);
+            dead = true;
         }
     }
 
