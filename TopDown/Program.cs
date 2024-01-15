@@ -33,6 +33,10 @@ List<Rectangle> deathSquares = new(){
     new(100, 300, 80, 80),
 };
 
+List<Rectangle> winSquares = new(){
+    new(800, 300, 80, 80)
+};
+
 List<Rectangle> walls = new()
 {
     new(300, 300, 150, 20),
@@ -46,7 +50,7 @@ List<Rectangle> walls = new()
 
 List<Rectangle> wallsForLevel2 = new()
 {
-    
+    new(600, 400, 150, 20)
 };
 
 walls.Add(spawnPoint);
@@ -75,7 +79,7 @@ while (!Raylib.WindowShouldClose())
         }
     }
 
-    if (scene != "start")
+    if (scene == "game")
     {
         Raylib.ClearBackground(Color.PINK);
         Raylib.DrawTexturePro(character, new Rectangle(0,0, character.width, character.height), player, new Vector2(0, 0), 0, Color.WHITE);
@@ -217,6 +221,7 @@ while (!Raylib.WindowShouldClose())
 
         if (player.x > 1280 && level == 1){
             level = 2;
+            boosts.Clear();
             walls.Clear();
             walls = walls.Concat(wallsForLevel2).ToList();
             spawnPoint = new(300, 500, 150, 20);
@@ -259,9 +264,17 @@ while (!Raylib.WindowShouldClose())
         foreach (Rectangle wall in wallsForLevel2){
             Raylib.DrawRectangleRec(wall, Color.GRAY);
         }
+
+        foreach (Rectangle winSquare in winSquares){
+            Raylib.DrawRectangleRec(winSquare, Color.GOLD);
+        }
+
+        if (WallCheck(player, winSquares) == true){
+            scene = "win";
+        }
     }
 
-    else if (scene == "start")
+    if (scene == "start")
     {
         Raylib.DrawText("Press Space to Begin", windowWidth/3+48, windowHeight/2+windowHeight/3, 32, Color.GRAY);
         if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
@@ -269,6 +282,12 @@ while (!Raylib.WindowShouldClose())
             level = 1;
             scene = "game";
         }
+    }
+
+    if (scene == "win"){
+        level = 0;
+        Raylib.ClearBackground(Color.BLACK);
+        Raylib.DrawText("Win Get!", windowWidth/2, windowHeight/2, 48, Color.GOLD);
     }
 
     Raylib.BeginDrawing();
