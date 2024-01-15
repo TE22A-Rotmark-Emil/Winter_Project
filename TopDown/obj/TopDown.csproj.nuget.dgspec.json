@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj": {}
+    "c:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj": {}
   },
   "projects": {
-    "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj": {
+    "c:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj",
+        "projectUniqueName": "c:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj",
         "projectName": "TopDown",
-        "projectPath": "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj",
+        "projectPath": "c:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\TopDown.csproj",
         "packagesPath": "C:\\Users\\emil.rotmark\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\obj\\",
+        "outputPath": "c:\\Users\\emil.rotmark\\Documents\\Game_Development_Projects\\TopDown\\TopDown\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\emil.rotmark\\AppData\\Roaming\\NuGet\\NuGet.Config"

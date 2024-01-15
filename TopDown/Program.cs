@@ -78,10 +78,10 @@ while (!Raylib.WindowShouldClose())
     if (scene != "start")
     {
         Raylib.ClearBackground(Color.PINK);
-        Raylib.DrawTexturePro(character, new Rectangle(0,0,character.width, character.height), player, new Vector2(0, 0), 0, Color.WHITE);
-        Raylib.DrawRectangleRec(player, Color.DARKBLUE);
-        Raylib.DrawRectangleRec(groundCheck, Color.ORANGE);
-        Raylib.DrawRectangleRec(headCheck, Color.BLUE);
+        Raylib.DrawTexturePro(character, new Rectangle(0,0, character.width, character.height), player, new Vector2(0, 0), 0, Color.WHITE);
+        // Raylib.DrawRectangleRec(player, Color.DARKBLUE);
+        // Raylib.DrawRectangleRec(groundCheck, Color.ORANGE);
+        // Raylib.DrawRectangleRec(headCheck, Color.BLUE);
 
         movement = Vector2.Zero;
 
@@ -263,6 +263,7 @@ while (!Raylib.WindowShouldClose())
 
     else if (scene == "start")
     {
+        Raylib.DrawText("Press Space to Begin", windowWidth/3+48, windowHeight/2+windowHeight/3, 32, Color.GRAY);
         if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
         {
             level = 1;
