@@ -287,7 +287,11 @@ while (!Raylib.WindowShouldClose())
     if (scene == "win"){
         level = 0;
         Raylib.ClearBackground(Color.BLACK);
-        Raylib.DrawText("Win Get!", windowWidth/2, windowHeight/2, 48, Color.GOLD);
+        Raylib.DrawText("Win Get! (space to restart)", windowWidth/2, windowHeight/2, 48, Color.GOLD);
+        if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE)){
+            level = 1;
+            scene = "game";
+        }
     }
 
     Raylib.BeginDrawing();
